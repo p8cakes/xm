@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>xm: Sample Expense Page</title>
+    <!-- link rel="stylesheet" type="text/css" href="_static/main.css" />
+    <script type="text/javascript" language="JavaScript" src="_static/scripts.js"></script -->
+
+    <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+
+    <style>
+      table#xpenses {
+        font-family: calibri, verdana, arial, sans-serif;
+        border-collapse: collapse;
+      }
+
+      #xpenses td, #xpenses th {
+        border: 1px solid white;
+        text-align: center;
+        padding: 2px;
+      }
+
+      #xpenses tr:nth-child(even) {
+        background-color: #dddddd;
+      }
+
+      #xpenses tr:nth-child(odd) {
+        background-color: #eeeeee;
+      }
+    </style>
+
+    <script language="javascript">
+      // Autocomplete goes here
+      $(document).ready(function() {
+        $('#xmTitle1').autocomplete({
+          source: "getheads.php"
+        });
+      });
+
+      $(function() {
+        $("#xmDate1").datepicker();
+      });
+
+    </script>
+
+  </head>
+  <body>
+
+    <table id="xpenses">
+      <tbody>
+        <tr>
+          <th>#</th>
+          <th style="width: 75px;">&#128197;</th>
+          <th style="width: 200px;">Title</th>
+          <th>&#128181;</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td><input id="xmDate1" name="xmDate1" style="width: 85%;" maxlength="10" value="04/14/2017"/></td>
+          <td><input id="xmTitle1" name="xmTitle1" style="width: 95%;" maxlength="64"/></td>
+          <td><a href="javascript:alert('Voila!');">$</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
