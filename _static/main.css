@@ -1,0 +1,95 @@
+/****************************** Module Header ******************************
+ * Module Name:  XM
+ * Project:      Expense-tracking
+ *
+ * main.css file for Cascaded-Style-Sheet definitions
+ *
+ * Revisions:
+ *     1. Sundar Krishnamurthy          sundar@passion8cakes.com       04/16/2017       Initial file created.
+ ***************************************************************************/
+
+table#xpenses {
+  font-family: Calibri, Verdana, Arial;
+  border-collapse: collapse;
+}
+
+#xpenses td, #xpenses th {
+  border: 1px solid white;
+  text-align: center;
+  padding: 1px;
+}
+
+#xpenses tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+#xpenses tr:nth-child(odd) {
+  background-color: #eeeeee;
+}
+
+/* span class */
+.inputLabel {
+    font-family: Calibri, Verdana, Arial;
+    font-size: small;
+}
+
+/* span class */
+.boldLabel {
+    font-family: Calibri, Verdana, Arial;
+    font-weight: bold;
+    font-size: small;
+}
+
+.redLabel {
+    font-family: Calibri, Verdana, Arial;
+    font-size: small;
+    color: #DD0000;
+}
+
+/* Forever links are initially blue, underlined */
+a.forever:link {
+    color: blue;
+    text-decoration: none;
+}
+
+/* Regular links are initially blue, underlined */
+a.regular:link {
+    color: blue;
+    text-decoration: underline;
+}
+
+/* When a click occurs, change the color to green for all anchors */
+a.internal {
+    color: green;
+    text-decoration: none;
+}
+
+/* Hovering over all links, color them purple */
+a:hover {
+    color: purple;
+    background: transparent;
+}
+
+/* Forever links are still always blue, underlined */
+a.forever:visited {
+    color: blue;
+    text-decoration: none;
+}
+
+/* Visited links for regular ones change to red */
+a.regular:visited {
+    color: #880000;
+    text-decoration: underline;
+}
+
+.autocomplete {
+    background: none repeat scroll 0 0 #e4f8ff;
+    cursor: default;
+    margin: 0px 6px 0px 0px;
+    max-height: 600px;
+    min-width: 480px;
+    text-align: left;
+    overflow-style: auto;
+    font-family: Calibri, Verdana, Arial;
+    font-size: small;
+};

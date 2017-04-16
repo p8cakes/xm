@@ -14,11 +14,11 @@ yourEmailAddress = "";
 fqUri = "";
 cookieQualifier = "";
 
-with open("functions.php.out", "wt") as fout:
+with open("functions.original.php", "wt") as fout:
     with open("functions.php", "rt") as fin:
         for line in fin:
 
-            nextLine = line.replace('\r\n', '\n');
+            nextLine = line;
 
             if ("$$DATABASE_SERVER$$" in line)                  : nextLine = nextLine.replace("$$DATABASE_SERVER$$", dbServerName);
             if ("$$DATABASE_NAME$$" in line)                    : nextLine = nextLine.replace("$$DATABASE_NAME$$", dbName);
@@ -29,15 +29,13 @@ with open("functions.php.out", "wt") as fout:
 
             fout.write(nextLine);
 
-os.remove("functions.php");
-os.rename("functions.php.out", "functions.php");
-
-with open("xm.updated.sql", "wt") as fout:
+with open("xm.original.sql", "wt") as fout:
     with open("xm.sql", "rt") as fin:
         for line in fin:
 
-            nextLine = line.replace('\r\n', '\n');
+            nextLine = line;
 
+            if ("$$DATABASE_NAME$$" in line)                    : nextLine = nextLine.replace("$$DATABASE_NAME$$", dbName);
             if ("$$FIRST_NAME$$" in line)                       : nextLine = nextLine.replace("$$FIRST_NAME$$", firstName);
             if ("$$LAST_NAME$$" in line)                        : nextLine = nextLine.replace("$$LAST_NAME$$", lastName);
             if ("$$YOUR_EMAIL_ADDRESS$$" in line)               : nextLine = nextLine.replace("$$YOUR_EMAIL_ADDRESS$$", yourEmailAddress);
@@ -47,22 +45,18 @@ with open("xm.updated.sql", "wt") as fout:
 
             fout.write(nextLine);
 
-'''
 os.chdir("_static");
 
-with open("scripts.js.out", "wt") as fout:
-    with open("scripts.js", "rt") as fin:
+with open("scripts.js", "wt") as fout:
+    with open("scripts.original.js", "rt") as fin:
         for line in fin:
 
-            nextLine = line.replace('\r\n', '\n');
+            nextLine = line;
 
             if ("$$SITE_URL$$" in line)                         : nextLine = nextLine.replace("$$SITE_URL$$", fqUri);
 
-            fout.write(line);
-
-os.remove("scripts.js");
-os.rename("scripts.js.out", "scripts.js");
+            fout.write(nextLine);
 
 os.chdir("..");
-'''
+
 print("Complete!");
