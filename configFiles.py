@@ -14,8 +14,8 @@ yourEmailAddress = "";
 fqUri = "";
 cookieQualifier = "";
 
-with open("functions.original.php", "wt") as fout:
-    with open("functions.php", "rt") as fin:
+with open("functions.php", "wt") as fout:
+    with open("functions.original.php", "rt") as fin:
         for line in fin:
 
             nextLine = line;
@@ -29,8 +29,8 @@ with open("functions.original.php", "wt") as fout:
 
             fout.write(nextLine);
 
-with open("xm.original.sql", "wt") as fout:
-    with open("xm.sql", "rt") as fin:
+with open("xm.sql", "wt") as fout:
+    with open("xm.original.sql", "rt") as fin:
         for line in fin:
 
             nextLine = line;
