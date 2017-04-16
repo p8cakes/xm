@@ -59,18 +59,18 @@ session_start();
         <tr>
           <td>#</th>
           <td style="width: 75px;">&#128197;</td>
-          <td style="width: 120px;"><span class="boldLabel">Title</span></td>
-          <td><a class="forever" href="javascript:alert('Voila');">&#128181;</a></td>
-          <td style="width: 60px;"><span class="boldLabel">Spend</span></td>
-          <td style="width: 60px;"><span class="boldLabel">Pay -&gt;</span></td>
+          <td style="width: 180px;"><span class="boldLabel">Title</span></td>
+          <td style="width: 30px;"><a class="forever" href="javascript:alert('Voila');">&#128181;</a></td>
+          <td style="width: 100px;"><span class="boldLabel">Spend</span></td>
+          <td style="width: 100px;"><span class="boldLabel">Pay -&gt;</span></td>
           <td style="width: 120px;"><span class="boldLabel">Source</span></td>
           <td style="width: 120px;"><span class="boldLabel">Target</span></td>
-          <td style="width: 60px;"><span class="boldLabel">Income</span></td>
-          <td><a class="forever" href="javascript:alert('Voila');">&#128181;</a></td>
-          <td style="width: 60px;"><span class="boldLabel">-&gt; Pay</span></td>
+          <td style="width: 100px;"><span class="boldLabel">Income</span></td>
+          <td style="width: 30px;"><a class="forever" href="javascript:alert('Voila');">&#128181;</a></td>
+          <td style="width: 100px;"><span class="boldLabel">-&gt; Pay</span></td>
         </tr>
         <tr style="vertical-align: top;">
-          <td><span class="inputLabel">[New]</span></td>
+          <td><span class="inputLabel">*</span></td>
           <td><input id="xmDate" name="xmDate" style="width: 90%;" maxlength="10"/></td>
           <td><input id="xmTitle" name="xmTitle" style="width: 90%;" maxlength="64"/></td>
           <td><span class="inputLabel">$</span></td>
@@ -83,18 +83,20 @@ session_start();
           <td><input id="xmPay2" name="xmPay2" style="width: 90%;" maxlength="13" onblur="javascript:checkForMoney(this);"/></td>
         </tr>
         <tr>
-          <td style="width: 80px;" colspan="2"><span class="boldLabel">Category</span></td>
-          <td style="width: 150px;" colspan="3"><span class="boldLabel">Comments</span></td>
-          <td style="width: 80px;" colspan="2"><span class="boldLabel">Tag</span></td>
-          <td style="width: 100px;" colspan="2"><span class="boldLabel">Tags</span></td>
-          <td style="width: 40px;"><span class="boldLabel">Exclude</span></td>
+          <td><span class="inputLabel">&nbsp;</span></td>
+          <td colspan="2"><span class="boldLabel">Comments</span></td>
+          <td colspan="3"><span class="boldLabel">Category</span></td>
+          <td colspan="2"><span class="boldLabel">Tag</span></td>
+          <td><span class="boldLabel">Tags</span></td>
+          <td><span class="boldLabel">Exclude</span></td>
           <td><span class="boldLabel">&nbsp;</span></td>
         </tr>
         <tr style="vertical-align: top;">
-          <td colspan="2"><input id="xmCategory" name="xmCategory" style="width: 90%;" maxlength="16"/></td>
-          <td colspan="3"><input id="xmComments" name="xmComments" style="width: 90%;" maxlength="64"/></td>
+          <td><span class="inputLabel">&nbsp;</span></td>
+          <td colspan="2"><input id="xmComments" name="xmComments" style="width: 90%;" maxlength="64"/></td>
+          <td colspan="3"><input id="xmCategory" name="xmCategory" style="width: 90%;" maxlength="16"/></td>
           <td colspan="2"><input id="xmTag" name="xmTag" style="width: 90%;" maxlength="20"/></td>
-          <td colspan="2"><span class="inputLabel">Security<br/>Sundar</span></td>
+          <td><span class="inputLabel">Security<br/>Sundar</span></td>
           <td><input type="checkbox" id="cboxExclude" name="cboxExclude"></td>
           <td><span class="inputLabel"><a href="javascript:alert('Voila 2');">Save</a>&nbsp;&nbsp;<a href="javascript:alert('Voila 2');">Clear</a></span></td>
         </tr>

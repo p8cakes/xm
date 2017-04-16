@@ -41,7 +41,7 @@ with open("xm.sql", "wt") as fout:
             if ("$$YOUR_EMAIL_ADDRESS$$" in line)               : nextLine = nextLine.replace("$$YOUR_EMAIL_ADDRESS$$", yourEmailAddress);
 
             ''' Comment out the next line only if you know what you're doing! '''
-            if ("-- drop database" in line)                     : nextLine = nextLine.replace("-- drop database", "drop database");
+            ''' if ("-- drop database" in line)                     : nextLine = nextLine.replace("-- drop database", "drop database"); '''
 
             fout.write(nextLine);
 
