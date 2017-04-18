@@ -145,6 +145,7 @@ if (!isset($_SESSION["xm_sourceTargets"]) {
           <td class="commonInput" colspan="2">
             <span class="inputLabel">&nbsp;&nbsp;</span>
             <input type="text" id="xmDate" name="xmDate" maxlength="10"/>
+		    <span class="inputLabel">&nbsp;&nbsp;&nbsp;Exclude&nbsp;&nbsp;:&nbsp;<input type="checkbox" name="cboxExclude" id="cboxExclude" />
           </td>
         </tr>
         <tr style="vertical-align: top;">
@@ -156,8 +157,7 @@ if (!isset($_SESSION["xm_sourceTargets"]) {
  		  </td>
           <td class="commonInput" colspan="2">
             <span class="inputLabel">&nbsp;&nbsp;</span>
-            <input type="text" id="xmTitle" name="xmTitle" style="width: 60%;" maxlength="64"/>
-		    <span class="inputLabel">&nbsp;Exclude&nbsp;&nbsp;:&nbsp;<input type="checkbox" name="cboxExclude" id="cboxExclude" />
+            <input type="text" id="xmTitle" name="xmTitle" style="width: 45%;" maxlength="64"/>
           </td>
         </tr>
         <tr style="vertical-align: middle;">
@@ -166,11 +166,10 @@ if (!isset($_SESSION["xm_sourceTargets"]) {
  		  </td>
           <td class="commonInput" style="width: 40%">
             <span class="inputLabel">&nbsp;&nbsp;&nbsp;&nbsp;Source</span>
-			<a class="forever" href="javascript:alert('Voila');">&#128181;</a>
+			<a class="forever" href="javascript:alert('Voila');">&#127974;</a>
  		  </td>
           <td class="commonInput" style="width: 40%">
             <span class="inputLabel">&nbsp;&nbsp;&nbsp;&nbsp;Target</span>
-            <a class="forever" href="javascript:alert('Voila');">&#128181;</a>
  		  </td>
         </tr>
         <tr style="vertical-align: top;">
@@ -196,12 +195,12 @@ if (!isset($_SESSION["xm_sourceTargets"]) {
           <td class="commonInput">
             <span class="inputLabel">$</span>
             <input type="text" id="xmAmount" name="xmAmount" style="width: 30%;" maxlength="13" onblur="javascript:checkForMoney(this);"/>
-            <span class="inputLabel">(in USD)</span>
+            <span class="inputLabel">(in USD)&nbsp;<a class="forever" href="javascript:alert('Voila');">&#128181;</a></span>
 		  </td>
           <td class="commonInput">
             <span class="inputLabel">$</span>
             <input type="text" id="xmIncome" name="xmIncome" style="width: 30%;" maxlength="13" onblur="javascript:checkForMoney(this);"/>
-            <span class="inputLabel">(in USD)</span>
+            <span class="inputLabel">(in USD)&nbsp;<a class="forever" href="javascript:alert('Voila');">&#128181;</a></span>
 		  </td>
         </tr>
         <tr style="vertical-align: top;">
@@ -211,7 +210,7 @@ if (!isset($_SESSION["xm_sourceTargets"]) {
           </td>
           <td class="commonInput" colspan="2">
             <span class="inputLabel">&nbsp;&nbsp;</span>
-		    <input type="text" id="xmCategory" name="xmCategory" style="width: 60%;" maxlength="32"/>
+		    <input type="text" id="xmCategory" name="xmCategory" style="width: 45%;" maxlength="32"/>
             <a class="forever" href="javascript:alert('Voila');">&#128210;</a>
           </td>
         </tr>
@@ -222,7 +221,7 @@ if (!isset($_SESSION["xm_sourceTargets"]) {
           </td>
           <td class="commonInput" colspan="2">
             <span class="inputLabel">&nbsp;&nbsp;</span>
-            <input type="text" id="xmComment" name="xmComment" style="width: 60%;" maxlength="64"/>
+            <input type="text" id="xmComment" name="xmComment" style="width: 45%;" maxlength="64"/>
           </td>
         </tr>
         <tr style="vertical-align: top;">
@@ -232,7 +231,7 @@ if (!isset($_SESSION["xm_sourceTargets"]) {
           </td>
           <td class="commonInput" colspan="2">
             <span class="inputLabel">&nbsp;&nbsp;</span>
-            <input type="text" id="xmTags" name="xmTags" style="width: 60%;" maxlength="32"/>
+            <input type="text" id="xmTags" name="xmTags" style="width: 45%;" maxlength="32"/>
             <a class="forever" href="javascript:alert('Voila');">&#128204;</a>
           </td>
         </tr>
