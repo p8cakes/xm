@@ -6,29 +6,11 @@
 --
 -- xm.sql file to create the database, load metadata tables and stored procedures - please employ MySQL 5.5 or greater
 --
--- 1.     T1. mails table to store emails that need to be sent.
--- 2.     T2. mailsLog table to store log of emails that were sent.
--- 3.     T3. mailAttachments table to store attachments, that need to be sent (if any).
--- 4.     T4. mailApiKeys table to store mail API keys, valid ones we honor to dispatch email.
--- 5.     P1. addEmail stored procedure to fetch the active and email value for furnished API key.
--- 6.     P2. addMailAttachment stored procedure to add attachments to an email that was stored prior
--- 7.     P3. checkMailApiKey stored procedure to fetch the active and email value for furnished API key.
--- 8.     P4. markEmailAsReady stored procedure to change the status of an email as ready to send.
--- 9.     P5. logEmailDispatch stored procedure to change the status of an email as ready to send.
--- 10.    P6. getEmailToSend stored procedure to get the next email record that needs to be sent.
--- 11.    P7. getAttachmentsForEmail stored procedure to get the next email record that needs to be sent.
--- 12.    P8. deleteEmail stored procedure to delete the email whose ID is provided.
--- 13.    P9. populateApiKeys stored procedure to insert API keys into mailApiKeys table.
--- 14.    T5. appLogs table to store application logs.
--- 15.   P10. addAppLog stored procedure to add a certain string or log to the appLogs table.
--- 16.   P11. showLatestAppLogs stored procedure to fetch the latest configurable amount of logs inserted.
--- 17.   P12. clearAppLogs stored procedure to remove all entries from appLogs table.
--- 18.    T6. systemSettings table - table to store system settings, queried at session start and other places.
--- 19.   P13: populateSystemSettings SP - to get initial set of settings required for app.
--- 20.   P14: getSystemSetting SP - to get the value for a provided setting name.
+-- 1.    T1:    expenses table - all expenses go here
 --
 -- Revisions:
---      1. Sundar Krishnamurthy         sundar@passion8cakes.com               9/25/2020       Initial file created.
+--      1. Sundar Krishnamurthy         sundar@passion8cakes.com               3/25/2017       Initial file created.
+
 
 -- Very, very, very bad things happen if you uncomment this line below. Do at your peril, you have been warned!
 -- drop database if exists $$DATABASE_NAME$$;                                                        -- $$ DATABASE_NAME $$
@@ -39,550 +21,303 @@ create database if not exists $$DATABASE_NAME$$ character set utf8 collate utf8_
 -- Employ $$DATABASE_NAME$$
 use $$DATABASE_NAME$$;                                                                            -- $$ DATABASE_NAME $$
 
--- drop table if exists mails;
+-- drop table if exists sourceTargets;
 
--- 1. T1. mails table to store emails that need to be sent
-create table if not exists mails (
-    mailId                                    int( 10 ) unsigned               not null auto_increment,
-    sender                                    varchar ( 64 )                   default null,
-    senderEmail                               varchar ( 128 )                  default null,
-    recipients                                varchar ( 4096 )                 not null,
-    ccRecipients                              varchar ( 4096 )                 default null,
-    bccRecipients                             varchar ( 4096 )                 default null,
-    replyTo                                   varchar ( 128 )                  default null,
-    subject                                   varchar ( 236 )                  not null,
-    subjectPrefix                             varchar ( 16 )                   default null,
-    body                                      text,
-    ready                                     tinyint( 1 ) unsigned            not null default 0,
-    hasAttachments                            tinyint( 1 ) unsigned            not null default 0,
-    importance                                tinyint( 1 ) unsigned            not null default 0,
-    timestamp                                 datetime                         default null,
-    created                                   datetime                         not null,
-    KEY                                       mailId ( mailId )
+-- 1. T1. sourceTargets table to store all expense sources and targets
+create table if not exists sourceTargets (
+    sourceTargetId                            int ( 10 ) unsigned              not null auto_increment,
+    sourceTarget                              varchar( 32 )                    not null,
+    userId                                    int ( 10 ) unsigned,
+    enabled                                   tinyint ( 1 ) unsigned not null default 0,
+    created                                   datetime not null,
+    lastUpdate                                datetime not null,
+    key ( sourceTargetId ),
+    unique index ix_userId_sourceTarget ( userId, sourceTarget )
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
 
--- drop table if exists mailsLog;
+drop procedure if exists getSourceTargets;
 
--- 2. T2. mailsLog table to store log of emails that were sent
-create table if not exists mailsLog (
-    logId                                     int( 10 ) unsigned               not null auto_increment,
-    apiKeyId                                  int( 10 ) unsigned               not null,
-    mailId                                    int( 10 ) unsigned               default null,
-    sender                                    varchar ( 128 )                  not null,
-    recipient                                 varchar ( 4096 )                 not null,
-    subject                                   varchar ( 255 )                  not null,
-    size                                      int( 10 ) unsigned               default null,
-    timestamp                                 datetime                         not null,
-    KEY                                       logId ( logId )
-) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
+delimiter //
 
--- drop table if exists mailsAttachments;
+create procedure getSourceTargets(
+    in p_userId                               int ( 10 ) unsigned,
+    in p_enabled                              tinyint ( 1 )
+)
+begin
 
--- 3. T3. mailAttachments table to store attachments, that need to be sent (if any)
-create table if not exists mailAttachments (
-    mailAttachmentId                          int( 10 ) unsigned               not null auto_increment,
-    mailId                                    int( 10 ) unsigned               not null,
-    filename                                  varchar ( 1024 )                 not null,
-    filesize                                  int( 10 ) unsigned               not null,
-    attachment                                longblob                         not null,
-    created                                   datetime                         not null,
-    KEY                                       mailAttachmentId ( mailAttachmentId )
-) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
+    if p_enabled is null then
 
--- drop table if exists mailApiKeys;
+        select sourceTargetId, sourceTarget, enabled from sourceTargets
+        where userId = p_userId
+        order by sourceTarget;
 
--- 4. T4. mailApiKeys table to store mail API keys, valid ones we honor to dispatch email
-create table if not exists mailApiKeys (
-    apiId                                     int( 10 ) unsigned               not null auto_increment,
-    apiKey                                    varchar ( 32 )                   not null,
-    email                                     varchar ( 128 )                  not null,
-    active                                    tinyint( 1 ) unsigned            not null default 0,
+    else
+
+        select sourceTargetId, sourceTarget, enabled from sourceTargets
+        where userId = p_userId
+        and enabled = p_enabled
+        order by sourceTarget;
+
+    end if;
+
+end //
+
+
+set l_query = 'select distinct head from expenses ';
+set l_query = concat(l_query, 'where head like \'%', l_searchTerm, '%\' and ');
+set l_query = concat(l_query, ' userId=', p_userId);
+set l_query = concat(l_query, ' order by head limit ', p_count, ';');
+
+set @statement = l_query;
+prepare stmt from @statement;
+execute stmt;
+deallocate prepare stmt;
+
+
+
+end //
+
+delimiter ;
+
+-- drop table if exists expenses;
+
+-- 1. T1. expenses table to store all individual expenses
+create table if not exists expenses (
+    expenseId                                 int ( 10 ) unsigned              not null auto_increment,
+    userId                                    int ( 10 ) unsigned              not null,
+    sequenceId                                int ( 10 ) unsigned              not null,
+    sourceCurrencyId                          int ( 10 ) unsigned              default null,
+    date                                      datetime                         default null,
+    head                                      varchar( 64 )                    default null,
+    amount                                    float (12, 2)                    default null,
+    floatingAmount                            float (12, 2)                    default null,
+    sourceId                                  int ( 10 ) unsigned              default null,
+    targetId                                  int ( 10 ) unsigned              default null,
+    categoryId                                int ( 10 ) unsigned              default null,
+    detail                                    varchar( 256 )                   default null,
+    income                                    float ( 12, 2)                   default null,
+    floatingIncome                            float ( 12, 2)                   default null,
+    targetCurrencyId                          int ( 10 ) unsigned              default null,
     created                                   datetime                         not null,
     lastUpdate                                datetime                         not null,
-    KEY                                       apiId  ( apiId ),
-    UNIQUE INDEX                              i_apiKey ( apiKey )
+    timezone                                  float ( 5, 2 )                   default null,
+    key ( expenseId ),
+    index ix_userId ( userId ),
+    index ix_head ( head ),
+    index ix_date ( date )
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
 
-drop procedure if exists addEmail;
+insert expenses (
+    userId,
+    sequenceId,
+    sourceCurrencyId,
+    date,
+    head,
+    amount,
+    sourceId,
+    categoryId,
+    detail,
+    created,
+    lastUpdate,
+    timezone )
+values (
+2,
+1,
+1,
+'2017-01-01',
+'Seattle B-Sides',
+16.37,
+3,
+4,
+null,
+utc_timestamp(),
+utc_timestamp(),
+-8);
+
+insert expenses (
+    userId,
+    sequenceId,
+    sourceCurrencyId,
+    date,
+    head,
+    amount,
+    sourceId,
+    categoryId,
+    detail,
+    created,
+    lastUpdate,
+    timezone )
+values (
+2,
+2,
+1,
+'2017-01-01',
+'SideCar Enterprises',
+100,
+3,
+4,
+null,
+utc_timestamp(),
+utc_timestamp(),
+-8);
+
+drop procedure if exists getHeads;
 
 delimiter //
 
--- 5. P1. addEmail stored procedure to fetch the active and email value for furnished API key.
-create procedure addEmail (
-    in p_apiKey                              varchar ( 32 ),
-    in p_sender                              varchar ( 64 ),
-    in p_senderEmail                         varchar ( 128 ),
-    in p_recipients                          varchar ( 4096 ),
-    in p_ccRecipients                        varchar ( 4096 ),
-    in p_bccRecipients                       varchar ( 4096 ),
-    in p_replyTo                             varchar ( 128 ),
-    in p_subject                             varchar ( 236 ),
-    in p_subjectPrefix                       varchar ( 64 ),
-    in p_body                                text,
-    in p_markMailAsReady                     tinyint( 1 ) unsigned,
-    in p_hasAttachments                      tinyint( 1 ) unsigned,
-    in p_importance                          tinyint( 1 ) unsigned,
-    in p_timestamp                           datetime
+-- 2. P1. getHeads stored procedure to search for heads, employ provided string
+create procedure getHeads(
+    in p_userId                               int ( 10 ) unsigned,
+    in p_searchTerm                           varchar( 64 ),
+    in p_count                                int ( 10 ) unsigned
 )
 begin
 
-    declare l_apiId                          int( 10 ) unsigned default null;
+    declare l_query                           varchar( 192 );
+    declare l_searchTerm                      varchar( 128 );
 
-    select apiId into l_apiId
-    from mailApiKeys
-    where apiKey = p_apiKey
-    and active = 1;
+    set l_searchTerm = replace(p_searchTerm, '\'', '\'\'');
 
-    if l_apiId is not null then
+    set l_query = 'select distinct head from expenses ';
+    set l_query = concat(l_query, 'where head like \'%', l_searchTerm, '%\' and ');
+    set l_query = concat(l_query, ' userId=', p_userId);
+    set l_query = concat(l_query, ' order by head limit ', p_count, ';');
 
-       insert mails (
-           sender,
-           senderEmail,
-           recipients,
-           ccRecipients,
-           bccRecipients,
-           replyTo,
-           subject,
-           subjectPrefix,
-           body,
-           ready,
-           hasAttachments,
-           importance,
-           timestamp,
-           created
-        ) values (
-           p_sender,
-           p_senderEmail,
-           p_recipients,
-           p_ccRecipients,
-           p_bccRecipients,
-           p_replyTo,
-           p_subject,
-           p_subjectPrefix,
-           p_body,
-           p_markMailAsReady,
-           p_hasAttachments,
-           p_importance,
-           p_timestamp,
-           utc_timestamp()
-        );
+    set @statement = l_query;
+    prepare stmt from @statement;
+    execute stmt;
+    deallocate prepare stmt;
 
-        select last_insert_id() as mailId;
+end //
+
+delimiter ;
+
+call getHeadNames(1,'sid',10);
+
+-- drop table if exists worldCurrencies;
+
+-- 1. T1. sourceTargets table to store all expense sources and targets
+create table if not exists worldCurrencies (
+    currencyId                                int ( 10 ) unsigned              not null auto_increment,
+    name                                      varchar( 32 ) default null,
+    symbol                                    varchar( 8 ) default null,
+    abbr                                      varchar( 8 ) default null,
+    image                                     varchar( 128 ) default null,
+    enabled                                   tinyint ( 1 ) unsigned not null default 0,
+    created                                   datetime not null,
+    lastUpdate                                datetime not null,
+    key ( currencyId ),
+    unique index ix_worldCurrencies_name ( name )
+) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
+
+drop procedure if exists populateWorldCurrencies;
+
+delimiter //
+
+create procedure populateWorldCurrencies()
+begin
+
+    declare l_currencyCount                   int ( 10 ) unsigned;
+
+    select count(*) into l_currencyCount from worldCurrencies;
+
+    if l_currencyCount = 0 then
+
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Australian dollar', '$', 'AUD', 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Flag_of_Australia.svg/23px-Flag_of_Australia.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Brazilian real', '$', 'BRL', 'https://upload.wikimedia.org/wikipedia/en/thumb/0/05/Flag_of_Brazil.svg/22px-Flag_of_Brazil.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Canadian dollar', '$', 'CAD', 'https://upload.wikimedia.org/wikipedia/en/thumb/c/cf/Flag_of_Canada.svg/23px-Flag_of_Canada.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Chinese yuan', '¥', 'CNY', 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/23px-Flag_of_the_People%27s_Republic_of_China.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Euro', '€', 'EUR', 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/23px-Flag_of_Europe.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Hong Kong dollar', '$', 'HKD', 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Flag_of_Hong_Kong.svg/23px-Flag_of_Hong_Kong.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Indian rupee', '₹', 'INR', 'https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/23px-Flag_of_India.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Japanese yen', '¥', 'JPY', 'https://upload.wikimedia.org/wikipedia/en/thumb/9/9e/Flag_of_Japan.svg/23px-Flag_of_Japan.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Mexican peso', '$', 'MXN', 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Flag_of_Mexico.svg/23px-Flag_of_Mexico.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('New Zealand dollar', '$', 'NZD', 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Flag_of_New_Zealand.svg/23px-Flag_of_New_Zealand.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Norwegian krone', 'kr', 'NOK', 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Flag_of_Norway.svg/21px-Flag_of_Norway.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Pound Sterling', '£', 'GBP', 'https://upload.wikimedia.org/wikipedia/en/thumb/a/ae/Flag_of_the_United_Kingdom.svg/23px-Flag_of_the_United_Kingdom.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Russian ruble', '₽', 'RUB', 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f3/Flag_of_Russia.svg/23px-Flag_of_Russia.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('South African rand', 'R', 'ZAR', 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Flag_of_South_Africa.svg/23px-Flag_of_South_Africa.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('South Korean won', '₩', 'KRW', 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Flag_of_South_Korea.svg/23px-Flag_of_South_Korea.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Swedish krona', 'kr', 'SEK', 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Flag_of_Sweden.svg/23px-Flag_of_Sweden.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Swiss franc', 'Fr', 'CHF', 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Flag_of_Switzerland.svg/16px-Flag_of_Switzerland.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies ( name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('Turkish lira', '₺', 'TRY', 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Flag_of_Turkey.svg/23px-Flag_of_Turkey.svg.png', 1, utc_timestamp(), utc_timestamp());
+        insert worldCurrencies (name, symbol, abbr, image, enabled, created, lastUpdate)
+        values ('United States dollar', '$', 'USD', 'https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Flag_of_the_United_States.svg/23px-Flag_of_the_United_States.svg.png', 1, utc_timestamp(), utc_timestamp());
 
     end if;
 end //
 
 delimiter ;
 
-drop procedure if exists addMailAttachment;
+call populateWorldCurrencies();
+
+drop procedure populateWorldCurrencies;
+
+drop procedure if exists getWorldCurrencies;
 
 delimiter //
 
--- 6. P2. addMailAttachment stored procedure to add attachments to an email that was stored prior
-create procedure addMailAttachment (
-    in p_mailId                              int( 10 ) unsigned,
-    in p_filename                            varchar ( 1024 ),
-    in p_filesize                            int( 10 ) unsigned,
-    in p_attachment                          longblob
+create procedure getWorldCurrencies(
+    in p_enabled                              int( 10 ) unsigned
 )
 begin
 
-    declare l_mailId             int( 10 ) unsigned;
-    declare l_hasAttachments     bit;
+    if p_enabled is null then
 
-    set l_mailId = null;
-    set l_hasAttachments = null;
+        select
+          currencyId,
+          name,
+          symbol,
+          abbr,
+          image,
+          enabled,
+          created,
+          lastUpdate
+        from
+          worldCurrencies
+        order by
+          currencyId;
 
-    select
-        hasAttachments, mailId
-    into
-        l_hasAttachments, l_mailId
-    from
-        mails
-    where
-        mailId = p_mailId;
-
-    if l_hasAttachments is not null and l_hasAttachments = 0 then
-        update
-            mails
-        set
-            hasAttachments = 1
-        where
-            mailId = p_mailId;
-    end if;
-
-    if l_mailId is not null then
-        insert mailAttachments (
-            mailId,
-            filename,
-            filesize,
-            attachment,
-            created
-        ) values (
-            p_mailId,
-            p_filename,
-            p_filesize,
-            p_attachment,
-            utc_timestamp()
-        );
-
-        select last_insert_id() as mailAttachmentId;
     else
-        select null as mailAttachmentId;
-    end if;
-end //
 
-delimiter ;
-
-drop procedure if exists checkMailApiKey;
-
-delimiter //
-
--- 7. P3. checkMailApiKey stored procedure to fetch the active and email value for furnished API key.
-create procedure checkMailApiKey (
-    in p_apiKey                               varchar ( 32 )
-)
-begin
-
-    select
-        apiId as apiKeyId,
-        active,
-        email
-    from
-        mailApiKeys
-    where
-        apiKey = p_apiKey;
-end //
-
-delimiter ;
-
-drop procedure if exists markEmailAsReady;
-
-delimiter //
-
--- 8. P4 markEmailAsReady stored procedure to change the status of an email as ready to send
-create procedure markEmailAsReady (
-    in p_mailId                              int( 10 ) unsigned
-)
-begin
-
-    declare l_ready bit;
-    set l_ready = null;
-
-    select
-        ready into l_ready
-    from
-        mails
-    where
-        mailId = p_mailId;
-
-    if l_ready is not null and l_ready = 0 then
-        update
-            mails
-        set
-            ready = 1
-        where
-            mailId = p_mailId;
-
-    end if;
-
-    select p_mailId as mailId;
-end //
-
-delimiter ;
-
-drop procedure if exists logEmailDispatch;
-
-delimiter //
-
--- 9. P5 logEmailDispatch stored procedure to change the status of an email as ready to send
-create procedure logEmailDispatch (
-    in p_apiKeyId                             int( 10 ) unsigned,
-    in p_senderEmail                          varchar ( 128 ),
-    in p_recipients                           varchar ( 4096 ),
-    in p_subject                              varchar ( 255 ),
-    in p_size                                 int( 10 ) unsigned
-)
-begin
-
-    insert mailsLog (
-        apiKeyId,
-        sender,
-        recipient,
-        subject,
-        size,
-        timestamp
-    ) values (
-        p_apiKeyId,
-        p_senderEmail,
-        p_recipients,
-        p_subject,
-        p_size,
-        utc_timestamp()
-    );
-
-    select last_insert_id() as logId;
-
-end //
-
-delimiter ;
-
-drop procedure if exists getEmailToSend;
-
-delimiter //
-
--- 10. P6. getEmailToSend stored procedure to get the next email record that needs to be sent
-create procedure getEmailToSend (
-    in p_timestamp                            datetime
-)
-begin
-
-    select
-        mailId,
-        sender,
-        senderEmail,
-        recipients,
-        subject,
-        subjectPrefix,
-        ccRecipients,
-        bccRecipients,
-        replyTo,
-        body,
-        hasAttachments,
-        importance,
-        created
-    from
-        mails
-    where
-        ready = 1
-    and
-        ((timestamp is null) or (timestamp < p_timestamp))
-    order by
-        mailId
-    limit 1;
-end //
-
-delimiter ;
-
-drop procedure if exists getAttachmentsForEmail;
-
-delimiter //
-
--- 11. P7 getAttachmentsForEmail stored procedure to get the next email record that needs to be sent
-create procedure getAttachmentsForEmail (
-    in p_mailId                              int( 10 ) unsigned
-)
-begin
-
-    select
-        mailAttachmentId,
-        mailId,
-        filename,
-        filesize,
-        attachment,
-        created
-    from
-        mailAttachments
-    where
-        mailId = p_mailId
-    order by
-        mailAttachmentId;
-end //
-
-delimiter ;
-
-delimiter ;
-
-drop procedure if exists deleteEmail;
-
-delimiter //
-
--- 12. P8 deleteEmail stored procedure to delete the email whose ID is provided
-create procedure deleteEmail (
-    in p_mailId                               int( 10 ) unsigned
-)
-begin
-
-    declare l_mailId                          int( 10 ) unsigned default null;
-
-    select mailId
-        into l_mailId
-    from
-        mails
-    where
-        mailId = p_mailId;
-
-    if l_mailId is not null then
-        
-        delete
+        select
+          currencyId,
+          name,
+          symbol,
+          abbr,
+          image,
+          enabled,
+          created,
+          lastUpdate
         from
-            mailAttachments
+          worldCurrencies
         where
-            mailId = p_mailId;
-
-        delete
-        from
-            mails
-        where
-            mailId = p_mailId;
-
-        select p_mailId as mailId;
-    end if;
-end //
-
-delimiter ;
-
-drop procedure if exists populateApiKeys;
-
-delimiter //
-
--- 13. P9: populateApiKeys SP - populateApiKeys stored procedure to insert API keys into mailApiKeys table.
-create procedure populateApiKeys()
-begin
-    declare l_apiKeysCount                    int( 10 ) unsigned;
-
-    select count(*) into l_apiKeysCount from mailApiKeys;
-
-    if l_apiKeysCount = 0 then
-
-        insert mailApiKeys ( apiKey, email, active, created, lastUpdate)
-         values ('$$MAIL_API_KEY$$',                                             -- $$ MAIL_API_KEY $$ 
-                 '$$SENDER_EMAIL$$',                                             -- $$ SENDER_EMAIL $$
-                1, utc_timestamp(), utc_timestamp());
+          enabled = p_enabled
+        order by
+          currencyId;
 
     end if;
-end //
-
-delimiter ;
-
-call populateApiKeys();
-
-drop procedure populateApiKeys;
-
--- drop table if exists appLogs;
-
--- 14. T5. appLogs table to store application logs.
-create table if not exists appLogs (
-    id                                        int( 10 ) unsigned               not null auto_increment,
-    log                                       varchar ( 255 )                  not null,
-    created                                   datetime                         not null,
-    key ( id )
-) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
-
-drop procedure if exists addAppLog;
-
-delimiter //
-
--- 15. P9. addAppLog stored procedure to add a certain string or log to the appLogs table.
-create procedure addAppLog(
-    in            p_log                       varchar ( 255 )
-)
-begin
-
-    declare l_logId                           int( 10 ) unsigned default 0;
-
-    insert appLogs (log, created)
-    values ( p_log, utc_timestamp() );
-
-    select last_insert_id() into l_logId;
-    select l_logId as logId;
 
 end //
 
 delimiter ;
 
-drop procedure if exists showLatestAppLogs;
-
-delimiter //
-
--- 16. P11. showLatestAppLogs stored procedure to fetch the latest configurable amount of logs inserted.
-create procedure showLatestAppLogs(
-    in            p_count                     int( 10 ) unsigned
-)
-begin
-    select id, log, created
-    from appLogs
-    order by id desc
-    limit p_count;
-
-end //
-
-delimiter ;
-
-drop procedure if exists clearAppLogs;
-
-delimiter //
-
--- 17. P12. clearAppLogs stored procedure to remove all entries from appLogs table.
-create procedure clearAppLogs()
-begin
-    truncate table appLogs;
-
-end //
-
-delimiter ;
-
--- drop table if exists systemSettings;
-
--- 18. T6. systemSettings table - table to store system settings, queried at session start and other places.
-create table if not exists systemSettings (
-    id                                        int( 10 ) unsigned              not null auto_increment,
-    name                                      varchar ( 32 )                  not null,
-    value                                     varchar ( 255 )                 not null,
-    enabled                                   tinyint( 1 )                    unsigned default 0,
-    created                                   datetime                        not null,
-    lastUpdate                                datetime                        not null,
-    KEY ( id ),
-    UNIQUE INDEX ix_name ( name )
-) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8;
-
-drop procedure if exists populateSystemSettings;
-
-delimiter //
-
--- 19. P13: populateSystemSettings SP - to get initial set of settings required for app.
-create procedure populateSystemSettings()
-begin
-
-    declare l_settingsCount                   int( 10 ) unsigned;
-
-    select count(*) into l_settingsCount from systemSettings;
-
-    if l_settingsCount = 0 then
-
-        insert systemSettings ( name, value, enabled, created, lastUpdate)
-        values ('logAllCalls', '0', 1, utc_timestamp(), utc_timestamp());
-
-    end if;
-end //
-
-delimiter ;
-
-call populateSystemSettings();
-
-drop procedure populateSystemSettings;
-
-drop procedure if exists getSystemSetting;
-
-delimiter //
-
--- 20. P14: getSystemSetting SP - to get the value for a provided setting name.
-create procedure getSystemSetting(
-    in            p_name                      varchar ( 32 )
-)
-begin
-
-    select
-        name,
-        value,
-        enabled
-    from
-        systemSettings
-    where
-        name = p_name
-    order by
-        id
-    limit 1;
-end //
-
-delimiter ;
+call getWorldCurrencies();
