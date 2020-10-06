@@ -31,7 +31,7 @@
 --      1. Sundar Krishnamurthy         sundar@passion8cakes.com               9/25/2020       Initial file created.
 
 -- Very, very, very bad things happen if you uncomment this line below. Do at your peril, you have been warned!
-drop database if exists $$DATABASE_NAME$$;                                                        -- $$ DATABASE_NAME $$
+-- drop database if exists $$DATABASE_NAME$$;                                                        -- $$ DATABASE_NAME $$
 
 -- Create database $$DATABASE_NAME$$, with utf8 and utf8_general_ci
 create database if not exists $$DATABASE_NAME$$ character set utf8 collate utf8_general_ci;       -- $$ DATABASE_NAME $$
